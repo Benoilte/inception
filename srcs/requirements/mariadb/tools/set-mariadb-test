@@ -1,0 +1,64 @@
+#!/bin/bash
+set -e  # Exit on error
+
+# -------------------------------
+# Configuration from environment
+# -------------------------------
+: "${INCEPTION_MYSQL_DATABASE:?Environment variable INCEPTION_MYSQL_DATABASE is not set}"
+: "${INCEPTION_MYSQL_USER:?Environment variable INCEPTION_MYSQL_USER is not set}"
+: "${INCEPTION_MYSQL_PASS:?Environment variable INCEPTION_MYSQL_PASS is not set}"
+: "${INCEPTION_MYSQL_ROOT_PASS:?Environment variable INCEPTION_MYSQL_ROOT_PASS is not set}"
+
+# -------------------------------
+# Prepare socket directory
+# -------------------------------
+mkdir -p /run/mysqld
+chown mysql:mysql /run/mysqld
+
+# -------------------------------
+# Start MariaDB in background
+# -------------------------------
+echo "Starting MariaDB..."
+mysqld_safe --datadir=/var/lib/mysql &
+
+# -------------------------------
+# Wait until MariaDB is ready
+# -------------------------------
+MAX_RETRIES=15
+COUNT=0
+echo "Waiting for MariaDB to be ready..."
+until mysqladmin ping --silent; do
+    COUNT=$((COUNT+1))
+    if [ $COUNT -ge $MAX_RETRIES ]; then
+        echo "ERROR: MariaDB did not start within $((MAX_RETRIES*2)) seconds."
+        exit 1
+    fi
+    sleep 2
+done
+echo "MariaDB is ready!"
+
+# -------------------------------
+# Set root password (first-time connection)
+# -------------------------------
+mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${INCEPTION_MYSQL_ROOT_PASS}';"
+
+# -------------------------------
+# Create database and user
+# -------------------------------
+mysql -u root -p"${INCEPTION_MYSQL_ROOT_PASS}" -e "CREATE DATABASE IF NOT EXISTS \`${INCEPTION_MYSQL_DATABASE}\`;"
+mysql -u root -p"${INCEPTION_MYSQL_ROOT_PASS}" -e "CREATE USER IF NOT EXISTS \`${INCEPTION_MYSQL_USER}\`@'%' IDENTIFIED BY '${INCEPTION_MYSQL_PASS}';"
+mysql -u root -p"${INCEPTION_MYSQL_ROOT_PASS}" -e "GRANT ALL PRIVILEGES ON \`${INCEPTION_MYSQL_DATABASE}\`.* TO \`${INCEPTION_MYSQL_USER}\`@'%';"
+mysql -u root -p"${INCEPTION_MYSQL_ROOT_PASS}" -e "FLUSH PRIVILEGES;"
+
+echo "Database and user setup complete."
+
+# -------------------------------
+# Shut down temporary MariaDB instance
+# -------------------------------
+mysqladmin -u root -p"${INCEPTION_MYSQL_ROOT_PASS}" shutdown
+
+# -------------------------------
+# Start MariaDB in foreground
+# -------------------------------
+echo "Starting MariaDB in foreground..."
+exec mysqld_safe
