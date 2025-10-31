@@ -28,9 +28,18 @@ done
 
 echo "MariaDB is up — configuring database..."
 
-# Secure root and create database + user
-mysql -u root <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${INCEPTION_MYSQL_ROOT_PASS}';
+# Detect if root already has a password
+if mysql -u root -e "SELECT 1;" &> /dev/null; then
+    echo "Root has no password yet — setting it now."
+    mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${INCEPTION_MYSQL_ROOT_PASS}';"
+    MYSQL_CMD="mysql -u root -p${INCEPTION_MYSQL_ROOT_PASS}"
+else
+    echo "Root already has a password — using it..."
+    MYSQL_CMD="mysql -u root -p${INCEPTION_MYSQL_ROOT_PASS}"
+fi
+
+# Use $MYSQL_CMD consistently
+$MYSQL_CMD <<EOF
 CREATE DATABASE IF NOT EXISTS \`${INCEPTION_MYSQL_DATABASE}\`;
 CREATE USER IF NOT EXISTS '${INCEPTION_MYSQL_USER}'@'%' IDENTIFIED BY '${INCEPTION_MYSQL_PASS}';
 GRANT ALL PRIVILEGES ON \`${INCEPTION_MYSQL_DATABASE}\`.* TO '${INCEPTION_MYSQL_USER}'@'%';
@@ -38,7 +47,7 @@ FLUSH PRIVILEGES;
 EOF
 
 # Stop background mysqld
-mysqladmin -uroot -p"${INCEPTION_MYSQL_ROOT_PASS}" shutdown
+mysqladmin -u root -p"${INCEPTION_MYSQL_ROOT_PASS}" shutdown
 
 # Relaunch MariaDB in foreground for Docker
 exec mysqld_safe --datadir=/var/lib/mysql
