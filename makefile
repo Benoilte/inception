@@ -17,6 +17,6 @@ clean:
 	@docker network rm $$(docker network ls -q) 2>/dev/null || true
 	@docker compose -f ./srcs/docker-compose.yml down -v --remove-orphans
 	@docker system prune -af
-	@rm -rf /home/bebrandt/data/wordpress/* /home/bebrandt/data/mariadb/*
+	@sudo rm -rf /home/bebrandt/data/wordpress/* /home/bebrandt/data/mariadb/*
 
 .PHONY: all down down-v clean
