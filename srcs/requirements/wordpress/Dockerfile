@@ -1,13 +1,10 @@
 FROM debian:bookworm
 
-RUN apt update -y && apt upgrade -y
-
-RUN apt install -y vim curl wget
-
-RUN apt-get install -y	php7.3\
-						php-fpm\
-						php-mysql\
-						mariadb-client
+RUN apt update -y && apt install -y wget\
+									php7.3\
+									php-fpm\
+									php-mysql\
+									mariadb-client
 
 COPY /tools/setup.sh /setup.sh
 RUN chmod +x /setup.sh && /setup.sh
