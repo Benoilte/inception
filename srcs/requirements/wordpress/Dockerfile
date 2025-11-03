@@ -13,6 +13,4 @@ COPY /conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 COPY /conf/auto_config.sh /usr/local/bin/auto_config.sh
 RUN chmod +x /usr/local/bin/auto_config.sh
 
-WORKDIR /
-
 ENTRYPOINT [ "/usr/local/bin/auto_config.sh" ]
