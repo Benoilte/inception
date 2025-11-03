@@ -7,8 +7,20 @@ networks:
     driver: bridge
 
 volumes:
-  wp:
+  wordpress:
+    name: wp
+    driver: local
+    driver_opts:
+      type: bind
+      o: bind
+      device: "/home/bebrandt/data/wordpress"
   db:
+    name: db
+    driver: local
+    driver_opts:
+      type: bind
+      o: bind
+      device: "/home/bebrandt/data/mariadb"
 
 services:
   mariadb:
