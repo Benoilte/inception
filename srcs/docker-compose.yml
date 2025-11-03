@@ -7,7 +7,7 @@ networks:
     driver: bridge
 
 volumes:
-  wordpress:
+  wp:
     name: wp
     driver: local
     driver_opts:
