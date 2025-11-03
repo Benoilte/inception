@@ -4,8 +4,6 @@ sleep 10
 
 WP_PATH="/var/www/html"
 
-chown -R www-data:www-data $WP_PATH
-
 if [ ! -f "$WP_PATH/wp-config.php" ]; then
 
 	cd $WP_PATH
@@ -33,5 +31,7 @@ if [ ! -f "$WP_PATH/wp-config.php" ]; then
 
 	mkdir -p /run/php
 fi
+
+chown -R www-data:www-data $WP_PATH
 
 /usr/sbin/php-fpm8.2 -F
