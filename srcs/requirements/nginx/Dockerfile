@@ -1,6 +1,6 @@
 FROM debian:bookworm
 
-RUN apt update && apt install -y nginx
+RUN apt-get update && apt-get install -y nginx
 
 COPY conf/nginx.conf /etc/nginx/nginx.conf
 COPY tools/setup.sh /setup.sh
